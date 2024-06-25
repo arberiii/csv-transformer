@@ -5,18 +5,25 @@ import pandas as pd
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
+KV = {}
 
-def get_embedding(text, engine='text-embedding-3-small'):
+MODEL_SMALL = 'text-embedding-3-small'
+MODEL_LARGE = 'text-embedding-3-large'
+
+def get_embedding(text, engine=MODEL_SMALL):
+    if text in KV:
+        return KV[text]
     response = openai.Embedding.create(
         input=[text],
         engine=engine
     )
+    KV[text] = response['data'][0]['embedding']
     return response['data'][0]['embedding']
 
 
 def cosine_similarity(vec1, vec2):
     return sum(x * y for x, y in zip(vec1, vec2)) / (
-                (sum(x ** 2 for x in vec1) ** 0.5) * (sum(y ** 2 for y in vec2) ** 0.5))
+            (sum(x ** 2 for x in vec1) ** 0.5) * (sum(y ** 2 for y in vec2) ** 0.5))
 
 
 def find_most_similar_word(words, concept):
