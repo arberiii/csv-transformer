@@ -1,9 +1,10 @@
-# main.py
 from fastapi import FastAPI, File, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import pandas as pd
 import os
+
+from processing import get_csv_headers, find_most_similar_word
 
 app = FastAPI()
 UPLOAD_FOLDER = 'uploads'
@@ -24,6 +25,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
     file_path = os.path.join(UPLOAD_FOLDER, file.filename)
@@ -36,8 +38,16 @@ async def upload_file(file: UploadFile = File(...)):
 
 def process_csv(file_path):
     df = pd.read_csv(file_path)
-    # Perform your data processing here
-    # Example: df['new_column'] = df['existing_column'] * 2
+    header = get_csv_headers(df)
+    concept = "date time"
+    most_similar_word, similarity = find_most_similar_word(header, "date time")
+    print(f"The most similar word to '{concept}' is '{most_similar_word}' with a similarity score of {similarity:.4f}")
+
+    filtered_columns = [col for col in df.columns if most_similar_word in col]
+    filtered_df = df[filtered_columns]
+    new_date_time_header_title = 'Date time'
+    new_headers = {col: f"{new_date_time_header_title}" for i, col in enumerate(filtered_columns)}
+    filtered_df = filtered_df.rename(columns=new_headers)
     processed_file_path = os.path.join(PROCESSED_FOLDER, 'processed_' + os.path.basename(file_path))
-    df.to_csv(processed_file_path, index=False)
+    filtered_df.to_csv(processed_file_path, index=False)
     return processed_file_path
