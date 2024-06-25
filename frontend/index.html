@@ -1,0 +1,49 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV Processor</title>
+</head>
+<body>
+    <h1>Upload and Process CSV</h1>
+    <form id="upload-form" enctype="multipart/form-data">
+        <input type="file" id="file-input" name="file">
+        <button type="button" onclick="uploadFile()">Upload</button>
+    </form>
+    <h2>Processed CSV</h2>
+    <table id="csv-table"></table>
+
+    <script>
+        async function uploadFile() {
+            const form = document.getElementById('upload-form');
+            const formData = new FormData(form);
+            const response = await fetch('http://127.0.0.1:8000/upload/', {
+                method: 'POST',
+                body: formData
+            });
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            const responseText = await (await fetch(url)).text();
+            displayCSV(responseText);
+        }
+
+        function displayCSV(csv) {
+            const rows = csv.split('\n');
+            const table = document.getElementById('csv-table');
+            table.innerHTML = '';
+            rows.forEach(row => {
+                const tr = document.createElement('tr');
+                const cols = row.split(',');
+                cols.forEach(col => {
+                    const td = document.createElement('td');
+                    td.innerText = col;
+                    tr.appendChild(td);
+                });
+                table.appendChild(tr);
+            });
+        }
+    </script>
+</body>
+</html>
