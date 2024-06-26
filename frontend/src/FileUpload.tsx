@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { HotTable, HotColumn } from "@handsontable/react";
+
+import { addClassesToRows, alignHeaders } from "./hooksCallbacks";
+import "pikaday/css/pikaday.css";
+import "handsontable/dist/handsontable.min.css";
 
 const FileUpload: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
@@ -50,19 +55,32 @@ const FileUpload: React.FC = () => {
 
     const displayCSV = (csv: string) => {
         const rows = csv.split('\n');
-        return (
-            <table>
-                <tbody>
-                    {rows.map((row, rowIndex) => (
-                        <tr key={rowIndex}>
-                            {row.split(',').map((col, colIndex) => (
-                                <td key={colIndex}>{col}</td>
-                            ))}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        );
+        const headers = rows[0].split(',');
+        const data = rows.slice(1).map((row) => row.split(','));
+        console.log("wow", data, headers)
+        return <HotTable
+      data={data}
+      height={450}
+      colHeaders={headers}
+      dropdownMenu={true}
+      hiddenColumns={{
+        indicators: true,
+      }}
+      contextMenu={true}
+      multiColumnSorting={true}
+      filters={true}
+      rowHeaders={true}
+      autoWrapCol={true}
+      autoWrapRow={true}
+      afterGetColHeader={alignHeaders}
+      beforeRenderer={addClassesToRows}
+      manualRowMove={true}
+      licenseKey="non-commercial-and-evaluation"
+    >
+            {headers.map((header, index) => (
+                <HotColumn key={index} />
+            ))}
+    </HotTable>
     };
 
     return (
