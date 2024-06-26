@@ -5,26 +5,12 @@ const FileUpload: React.FC = () => {
     const [file, setFile] = useState<File | null>(null);
     const [newHeaders, setNewHeaders] = useState<string[]>([]);
     const [csvData, setCsvData] = useState<string | null>(null);
-    const [numHeaders, setNumHeaders] = useState<number>(0);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             setFile(e.target.files[0]);
-            // Reset new headers and set the number of headers based on the file
             setNewHeaders([]);
-            parseHeaders(e.target.files[0]);
         }
-    };
-
-    const parseHeaders = (file: File) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const text = e.target?.result as string;
-            const firstLine = text.split('\n')[0];
-            const headers = firstLine.split(',');
-            setNumHeaders(headers.length);
-        };
-        reader.readAsText(file);
     };
 
     const handleHeaderChange = (index: number, value: string) => {
@@ -33,9 +19,13 @@ const FileUpload: React.FC = () => {
         setNewHeaders(headers);
     };
 
+    const addHeaderField = () => {
+        setNewHeaders([...newHeaders, ""]);
+    };
+
     const handleFileUpload = async () => {
-        if (!file || newHeaders.length !== numHeaders) {
-            alert("Please enter all new headers.");
+        if (!file || newHeaders.length === 0) {
+            alert("Please upload a file and add at least one new header.");
             return;
         }
 
@@ -79,19 +69,19 @@ const FileUpload: React.FC = () => {
         <div>
             <h1>Upload and Process CSV</h1>
             <input type="file" onChange={handleFileChange} />
-            {numHeaders > 0 && (
-                <div>
-                    <h2>Enter New Headers</h2>
-                    {[...Array(numHeaders)].map((_, index) => (
-                        <input
-                            key={index}
-                            type="text"
-                            placeholder={`Header ${index + 1}`}
-                            onChange={(e) => handleHeaderChange(index, e.target.value)}
-                        />
-                    ))}
-                </div>
-            )}
+            <div>
+                <h2>Enter New Headers</h2>
+                {newHeaders.map((header, index) => (
+                    <input
+                        key={index}
+                        type="text"
+                        placeholder={`Header ${index + 1}`}
+                        value={header}
+                        onChange={(e) => handleHeaderChange(index, e.target.value)}
+                    />
+                ))}
+                <button onClick={addHeaderField}>+</button>
+            </div>
             <button onClick={handleFileUpload}>Upload</button>
             <h2>Processed CSV</h2>
             {csvData && displayCSV(csvData)}
