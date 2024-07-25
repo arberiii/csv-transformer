@@ -3,22 +3,32 @@ import os
 import openai
 import pandas as pd
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+from embeding_storage import EmbeddingStorage
 
-KV = {}
+openai.api_key = os.getenv('OPENAI_API_KEY')
 
 MODEL_SMALL = 'text-embedding-3-small'
 MODEL_LARGE = 'text-embedding-3-large'
 
+small_storage = EmbeddingStorage('embeddings_small.json')
+large_storage = EmbeddingStorage('embeddings_large.json')
+
+
 def get_embedding(text, engine=MODEL_SMALL):
-    if text in KV:
-        return KV[text]
+    if engine == MODEL_SMALL:
+        storage = small_storage
+    else:
+        storage = large_storage
+
+    if value := storage.get(text):
+        return value
     response = openai.Embedding.create(
         input=[text],
         engine=engine
     )
-    KV[text] = response['data'][0]['embedding']
-    return response['data'][0]['embedding']
+    value = response['data'][0]['embedding']
+    storage.set(text, value)
+    return value
 
 
 def cosine_similarity(vec1, vec2):
